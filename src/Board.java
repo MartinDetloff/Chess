@@ -5,7 +5,8 @@ import java.util.List;
 public class Board {
     private int rows;
     private int cols;
-    private ArrayList<ArrayList<Piece>> board;
+    private ArrayList<ArrayList<Piece>> board = new ArrayList<>();
+    private Movement[][] movements = new Movement[rows][cols];
 
     ArrayList<String> f_lRows = new ArrayList<>(Arrays.asList(
             "Rook",
@@ -34,8 +35,7 @@ public class Board {
      */
     public void makeInitialBoard(){
         for(int i = 0; i < rows; i++){
-
-
+            // if we are on the first row
             if (i == 0 || i == rows - 1){
                 boolean isWhite = i == 0 ? false : true;
 
@@ -48,8 +48,9 @@ public class Board {
                 // add the hardcoded values
                 board.add(temp);
             }
-            else if (i == 1 || i == cols - 2){
+            else if (i == 1 || i == rows - 2){
                 // whole row of pawns
+                //    [[1,2,3]]
                 ArrayList<Piece> temp = new ArrayList<>();
                 boolean isWhite = i == 1 ? false : true;
 
@@ -57,6 +58,7 @@ public class Board {
                     temp.add(new Piece("Pawn", isWhite));
                 }
 
+                //    [[1,2,3]]
                 board.add(temp);
             }
 
@@ -65,19 +67,42 @@ public class Board {
 
                 for(int j = 0; j < cols; j++){
 
-                    // todo : remove this later
-                    if (j == 3 && i == 3){
-                        temp.add(new Piece("Pawn", true));
-                    }
-                    else {
+//                    // todo : remove this later
+//                    if (j == 3 && i == 3){
+//                        temp.add(new Piece("King", true));
+//                    }
+//                    else {
                         temp.add(new Piece("Blank", true));
-                    }
+//                    }
                 }
 
                 board.add(temp);
             }
+//            printArrayList();
         }
+
     }
+
+    private void correlateMovements(){
+
+
+
+
+        // we are going to populate the movement array with
+    }
+
+    private void printArrayList(){
+        int index = 0;
+        for(ArrayList<Piece> temp : board){
+            System.out.println(" Row " + index);
+            for(Piece i : temp){
+                System.out.print(i.toString() + " ");
+            }
+            index++;
+        }
+
+    }
+
 
     /**
      * Method to get the current board
@@ -105,8 +130,12 @@ public class Board {
      * @return the piece in question
      */
     public Piece getPiece(int row, int col) {
-        return board.get(row).get(col);
+        return board.get(col).get(row);
     }
+
+//    public Piece getPiece(Piece piece) {
+//        return board.
+//    }
 
     public static void main(String[] args) {
         Board board = new Board();
