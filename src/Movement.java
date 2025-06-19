@@ -5,7 +5,6 @@ public class Movement {
     private String moveMentString;
     private boolean isFirstMove = true;
     private String pieceName;
-
     private int[][] diagonalMoves = {
             {1,1},
             {1,-1},
@@ -45,10 +44,10 @@ public class Movement {
     public ArrayList<ArrayList<Integer>> getValidMoves(ArrayList<ArrayList<Piece>> board, int row, int col, Piece piece) {
         ArrayList<ArrayList<Integer>> validMoves = new ArrayList<>();
         String pieceC = piece.toString();
-
+        String currentMove = getMoveMentString(pieceC);
 
         // if we are a queen or a rook or a bishop then we want to use this method
-        validMoves = parseMoveMentString(moveMentString, row, col, board);
+        validMoves = parseMoveMentString(currentMove, row, col, board);
 
         // print for debugging
         printValidMoves(validMoves);
@@ -66,6 +65,7 @@ public class Movement {
         }
     }
 
+
     public ArrayList<ArrayList<Integer>> parseMoveMentString(String moveMentString, int row, int col,
                                                              ArrayList<ArrayList<Piece>> board) {
 
@@ -77,8 +77,9 @@ public class Movement {
             System.out.println("This is the current character " + currentChar);
             validMoves.addAll(helperDirections(currentChar, moveMentString, i, row, col, board));
         }
+
         // just need to set this after the initial move here.
-        isFirstMove = false;
+//        isFirstMove = false;
 
         return validMoves;
     }
@@ -88,7 +89,7 @@ public class Movement {
                                                            int col, ArrayList<ArrayList<Piece>> board) {
         //we need a way to determine from the direction if we should be updating y or x
         int[][] moves;
-        boolean isWhite = board.get(row).get(col).getIsWhite();
+        boolean isWhite = board.get(col).get(row).getIsWhite();
         ArrayList<ArrayList<Integer>> combined = new ArrayList<>();
 
         if(direction == 'H'){
@@ -117,6 +118,10 @@ public class Movement {
                     {-1, 2},
                     {-1, -2},
                     {1, -2},
+                    {2, 1},
+                    {-2, 1},
+                    {-2, -1},
+                    {2, -1},
             };
         }
 
@@ -129,32 +134,54 @@ public class Movement {
 
 
             if(this.isFirstMove && isWhite){
-                move1.addAll(Arrays.asList(row - 2, col));
-                move2.addAll(Arrays.asList(row - 1, col));
+
+                if (board.get(col - 1).get(row).toString().equals("Blank")) {
+                    move2.addAll(Arrays.asList(row, col - 1));
+
+                    if (board.get(col - 2).get(row).toString().equals("Blank")) {
+                        move1.addAll(Arrays.asList(row, col - 2));
+                    }
+                }
             }
 
             else if(this.isFirstMove && !isWhite){
-                move1.addAll(Arrays.asList(row + 2, col));
-                move2.addAll(Arrays.asList(row + 1, col));
+
+                if (board.get(col + 1).get(row).toString().equals("Blank")){
+                    move2.addAll(Arrays.asList(row , col + 1));
+
+                    if (board.get(col + 2).get(row).toString().equals("Blank")){
+                        move1.addAll(Arrays.asList(row , col + 2));
+                    }
+                }
+
+
             }
 
-            else if (!isWhite){
-                move1.addAll(Arrays.asList(row - 1, col));
+            else if (!isWhite && board.get(col + 1).get(row).toString().equals("Blank")){
+//                System.out.println( " THE PIECE IS BLACK  222 ");
+                move1.addAll(Arrays.asList(row, col + 1));
             }
 
-            else{
-                move1.addAll(Arrays.asList(row - 1, col));
+            else if (isWhite && board.get(col - 1).get(row).toString().equals("Blank")){
+                move1.addAll(Arrays.asList(row, col - 1));
             }
+
 
             if(!this.isFirstMove){
-                combined.add(move1);
+                if (!move1.isEmpty()){
+                    combined.add(move1);
+                }
             }
             else {
-                combined.add(move1);
-                combined.add(move2);
+                if (!move1.isEmpty()){
+                    combined.add(move1);
+                }
+                if (!move2.isEmpty()){
+                    combined.add(move2);
+                }
             }
 
-            combined.addAll(checkForPawnTakes(row, col, board, isWhite));
+            combined.addAll(checkForPawnTakes(col, row, board, isWhite));
 
             return combined;
         }
@@ -178,14 +205,19 @@ public class Movement {
                 int newRow = dirT[0] + row;
                 int newCol = dirT[1] + col;
 
-                boolean isSameColor = board.get(newRow).get(newCol).getIsWhite() == isWhite;
-                boolean isBlankTile = board.get(newRow).get(newCol).toString().equals("Blank");
-
                 if(!checkBounds(newRow, newCol)){
                     continue;
                 }
 
-                else if (!isSameColor || isBlankTile){
+                boolean isSameColor = board.get(newCol).get(newRow).getIsWhite() == isWhite;
+                boolean isBlankTile = board.get(newCol).get(newRow).toString().equals("Blank");
+
+                System.out.println("This is the is same color " + isSameColor);
+                System.out.println("This is the color : " + isWhite);
+
+
+
+                if (!isSameColor || isBlankTile){
                     ArrayList<Integer> temp = new ArrayList<>();
                     temp.add(newRow);
                     temp.add(newCol);
@@ -218,10 +250,16 @@ public class Movement {
     }
 
 
-
-
-
+    /**
+     * Method to check for pawn takes
+     * @param row current row
+     * @param col current col
+     * @param board current board
+     * @param isWhite boolean to check if its white
+     * @return positions that are valid
+     */
     private ArrayList<ArrayList<Integer>> checkForPawnTakes(int row, int col, ArrayList<ArrayList<Piece>> board, boolean isWhite) {
+
         ArrayList<ArrayList<Integer>> combined = new ArrayList<>();
         int row2Check = isWhite ? row - 1 : row + 1;
         int[] cols2Check = {col - 1, col + 1};
@@ -231,26 +269,34 @@ public class Movement {
         }
 
         for (int currentCol : cols2Check){
+
             if(currentCol > 7 || currentCol < 0){
                 continue;
             }
-            else if (!board.get(row2Check).get(currentCol).toString().equals("Blank") &&
+
+            System.out.println("current col : " + currentCol + " row : " + row2Check);
+            System.out.println("FIRST CHECK " + board.get(row2Check).get(currentCol).toString().equals("Blank"));
+            System.out.println("TO STRING " + board.get(row2Check).get(currentCol).toString());
+            System.out.println("SECOND CHECK " +  (board.get(row2Check).get(currentCol).getIsWhite() == isWhite));
+
+
+
+            if (!board.get(row2Check).get(currentCol).toString().equals("Blank") &&
                     board.get(row2Check).get(currentCol).getIsWhite() != isWhite){
 
-                System.out.println("We are here");
+//                System.out.println("We are here");
 
                 // temp hold the current row and col that we could potentially take
                ArrayList<Integer> temp = new ArrayList<>();
-               temp.add(row2Check);
                temp.add(currentCol);
+               temp.add(row2Check);
+
+//                System.out.println("HERE Row " + temp.get(0) + " Col " + temp.get(1));
 
                combined.add(temp);
             }
         }
-
-
-
-
+        System.out.println();
 
         return combined;
     }
@@ -269,8 +315,8 @@ public class Movement {
                                                                      ArrayList<ArrayList<Piece>> board,
                                                                      boolean isThereALimit) {
         // initial color here
-        boolean isWhite = board.get(row).get(col).getIsWhite();
-        int limit = isThereALimit ? 100 : 1;
+        boolean isWhite = board.get(col).get(row).getIsWhite();
+        int limit = isThereALimit ? 1 : 100;
 
         row += deltaY;
         col += deltaX;
@@ -278,7 +324,8 @@ public class Movement {
         int currentIteration = 0;
 
         while(row >= 0 && col >= 0 && row < 8 && col < 8 && currentIteration < limit) {
-            Piece currentP = board.get(row).get(col);
+            Piece currentP = board.get(col).get(row);
+
 
             if (!currentP.toString().equals("Blank")){
                 // we need to check if this is the same color or a different color
@@ -288,13 +335,17 @@ public class Movement {
                     validMoves.add(new ArrayList<>(Arrays.asList(row, col)));
                     System.out.println("ROW " + row + " " + "COL " + col);
                 }
+
                 break;
+
+
             }
 
             else{
                 validMoves.add(new ArrayList<>(Arrays.asList(row, col)));
                 System.out.println("ROW " + row + " " + "COL " + col);
             }
+
             row += deltaY;
             col += deltaX;
             currentIteration++;
@@ -329,7 +380,7 @@ public class Movement {
 //        m.exploreUntilYouHitSomething(1, 0, 1,0, board1);
 
 //        m.parseMoveMentString("VI", 3, 3, board1);
-        m.getValidMoves(board1, 3, 3, board.getPiece(3, 3));
+//        m.getValidMoves(board1, 3, 3, board.getPiece(3, 3));
     }
 
 

@@ -7,6 +7,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class GUI extends Application {
@@ -19,6 +20,8 @@ public class GUI extends Application {
     private GridPane grid = new GridPane();
     private HashMap<StackPane, int[]> pieces = new HashMap<>();
     private int[] lastPiecePos = null;
+    private ArrayList<ArrayList<Integer>> lastPossibleMoves = new ArrayList<>();
+
 //    private Color lastPieceColor = null;
 
 
@@ -48,7 +51,6 @@ public class GUI extends Application {
         for(int i = 0; i < rows; i++){
             for(int j = 0; j < cols; j++){
                 Piece currentP = board.getPiece(i, j);
-                currentP.toString();
                 Text text = new Text(currentP.toString());
 
                 StackPane temp = new StackPane();
@@ -65,7 +67,7 @@ public class GUI extends Application {
                 }
 
 
-                Color color = (i + j) % 2 == 0 ? Color.BEIGE : Color.BROWN;
+                Color color = (i + j) % 2 == 0 ? Color.BEIGE : Color.SADDLEBROWN;
                 rectangle.setFill(color);
 
                 temp.getChildren().addAll(rectangle, text);
@@ -85,9 +87,12 @@ public class GUI extends Application {
     private void updateBoard(){
         Color temp = Color.BLACK;
 
-        for(int rowT = 0; rowT < rows; rowT++){
-            for (int colT = 0; colT < cols; colT++ ){
+        System.out.println("HERE");
+        for(int rowT = 0; rowT < rows; rowT ++){
+            for (int colT = 0; colT < cols; colT ++){
                 Piece currentP = board.getPiece(rowT, colT);
+                Text updatedText = new Text(currentP.toString());
+
                 int current1DIndex = colT  + rowT * 8;
 
 
@@ -101,7 +106,24 @@ public class GUI extends Application {
                         rect.setFill(Color.GREEN);
 
                         Text text = ((Text) ((StackPane) grid.getChildren().get(current1DIndex)).getChildren().get(1));
-                        System.out.println(text.toString());
+                        System.out.println("THIS IS THE TEXT : " + updatedText.toString());
+                        text.setText(updatedText.getText());
+
+                    };
+                }
+
+
+                else if (checkIfPossibleMovesContains(rowT, colT)){
+                    if(grid.getChildren().get(current1DIndex) instanceof StackPane){
+                        StackPane currentStackPane = (StackPane) grid.getChildren().get(current1DIndex);
+
+                        // change the rect color
+                        Rectangle rect = (Rectangle) currentStackPane.getChildren().get(0);
+                        rect.setFill(Color.RED);
+
+                        Text text = ((Text) ((StackPane) grid.getChildren().get(current1DIndex)).getChildren().get(1));
+                        text.setText(updatedText.getText());
+
                     };
                 }
 
@@ -112,17 +134,26 @@ public class GUI extends Application {
 
                         // change the rect color
                         Rectangle rect = (Rectangle) currentStackPane.getChildren().get(0);
-                        Color color = (rowT + colT) % 2 == 0 ? Color.BEIGE : Color.BROWN;
+                        Color color = (rowT + colT) % 2 == 0 ? Color.BEIGE : Color.SADDLEBROWN;
                         rect.setFill(color);
 
                         //
                         Text text = ((Text) ((StackPane) grid.getChildren().get(current1DIndex)).getChildren().get(1));
-                        System.out.println(text.toString());
+                        text.setText(updatedText.getText());
+
                     };
                 }
-
             }
         }
+    }
+
+    private boolean checkIfPossibleMovesContains(int rowT, int colT){
+        for(ArrayList<Integer> possibleMove : lastPossibleMoves){
+            if (possibleMove.get(0) == rowT && possibleMove.get(1) == colT){
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -139,15 +170,39 @@ public class GUI extends Application {
 
             Piece currentP = board.getPiece(row, col);
 
+
             int[] location = new int[2];
             location[0] = row;
             location[1] = col;
 
-            System.out.println( row + " " + col);
-            System.out.println(currentP.toString());
 
-            if (location != lastPiecePos){
+
+            // need to update more states here
+            if(location != lastPiecePos && checkIfPossibleMovesContains(row, col)){
+                Piece lastP = board.getPiece(lastPiecePos[0], lastPiecePos[1]);
+
+                // need to say that we need to update the board state based upon the new strings
+
+                // replace the current row/ col with the piece in question'
+                System.out.println("This is the last piece " + lastPiecePos[0] + " and " + lastPiecePos[1]);
+
+                // set the new piece here and the old piece location to blank
+                board.setPiece(row, col, lastP);
+                board.setPiece(lastPiecePos[0], lastPiecePos[1], new Piece("Blank", true));
+
+                // set the first move to false after this
+                lastP.getMovement().setFirstMove(false);
+
+                // update the location and the new available things
+                // todo : might need to take turns instead
                 lastPiecePos = location;
+                lastPossibleMoves = currentP.getMovement().getValidMoves(board.getBoard(), row, col, currentP);
+
+
+            }
+            else if (location != lastPiecePos){
+                lastPiecePos = location;
+                lastPossibleMoves = currentP.getMovement().getValidMoves(board.getBoard(), row, col, currentP);
             }
 
             updateBoard();

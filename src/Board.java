@@ -49,8 +49,7 @@ public class Board {
                 board.add(temp);
             }
             else if (i == 1 || i == rows - 2){
-                // whole row of pawns
-                //    [[1,2,3]]
+
                 ArrayList<Piece> temp = new ArrayList<>();
                 boolean isWhite = i == 1 ? false : true;
 
@@ -58,7 +57,6 @@ public class Board {
                     temp.add(new Piece("Pawn", isWhite));
                 }
 
-                //    [[1,2,3]]
                 board.add(temp);
             }
 
@@ -66,19 +64,11 @@ public class Board {
                 ArrayList<Piece> temp = new ArrayList<>();
 
                 for(int j = 0; j < cols; j++){
-
-//                    // todo : remove this later
-//                    if (j == 3 && i == 3){
-//                        temp.add(new Piece("King", true));
-//                    }
-//                    else {
-                        temp.add(new Piece("Blank", true));
-//                    }
+                    temp.add(new Piece("Blank", true));
                 }
 
                 board.add(temp);
             }
-//            printArrayList();
         }
 
     }
@@ -133,6 +123,11 @@ public class Board {
         return board.get(col).get(row);
     }
 
+    public void setPiece(int row, int col, Piece piece) {
+        board.get(col).set(row, piece);
+        System.out.println("Update the board here " + board.get(col).get(row).toString());
+    }
+
 //    public Piece getPiece(Piece piece) {
 //        return board.
 //    }
@@ -142,8 +137,9 @@ public class Board {
         board.makeInitialBoard();
         board.printBoard();
 
-//        System.out.println(board.getPiece(0, 2).toString());
-//        System.out.println(board.getPiece(7, 0).toString());
+        board.setPiece(0, 2, new Piece("King", true));
+        System.out.println(board.getPiece(0, 2).toString());
+        System.out.println(board.getPiece(7, 0).toString());
 
     }
 }
