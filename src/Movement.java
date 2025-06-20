@@ -52,7 +52,7 @@ public class Movement {
         validMoves = parseMoveMentString(currentMove, row, col, board);
 
         // print for debugging
-        printValidMoves(validMoves);
+//        printValidMoves(validMoves);
 
         return validMoves;
     }
@@ -246,6 +246,8 @@ public class Movement {
                                                            ArrayList<ArrayList<Piece>> board){
         ArrayList<ArrayList<Integer>> combined = new ArrayList<>();
 
+//        System.out.println("IS WHITE IS " + isWhite);
+
         int[][] allDirections = {
                 {1,0}, // down
                 {-1,0}, // up
@@ -259,6 +261,7 @@ public class Movement {
 
 
         for(int[] dirT :  allDirections){
+            ArrayList<ArrayList<Piece>> deepCopy = createDeepCopy(board);
             int newRow = dirT[0] + row;
             int newCol = dirT[1] + col;
 
@@ -269,21 +272,119 @@ public class Movement {
             boolean isSameColor = board.get(newCol).get(newRow).getIsWhite() == isWhite;
             boolean isBlankTile = board.get(newCol).get(newRow).toString().equals("Blank");
 
-            if (!isSameColor || isBlankTile){
+            Piece piece = deepCopy.get(newRow).get(newCol);
+
+            deepCopy.get(row).set(col, new Piece("Blank", true));
+            deepCopy.get(newRow).set(newCol, new Piece("King", isWhite));
+
+//            System.out.println("CURRENT PIECE " + deepCopy.get(newCol).get(newRow));
+
+            System.out.println("Trying move to " + newRow + "," + newCol);
+
+            if (((!isSameColor || isBlankTile) && !isSquareUnderAttack(newRow, newCol, deepCopy, isWhite))){
                 ArrayList<Integer> temp = new ArrayList<>();
                 temp.add(newRow);
                 temp.add(newCol);
                 combined.add(temp);
             }
+
+            // set the squares back to what they were
+//            deepCopy.get(row).set(col, new Piece("King", isWhite));
+//            deepCopy.get(newRow).set(newCol, piece);
         }
+
+        // here we want to calculate the possible moves of all the other pieces, and make sure that's not conflicting
+        // meaning that we cannot get into check by moving somewhere
+
+
 
         return combined;
 
     }
 
+    private ArrayList<ArrayList<Piece>> createDeepCopy(ArrayList<ArrayList<Piece>> board){
+        ArrayList<ArrayList<Piece>> deepCopy = new ArrayList<>();
+
+        for(ArrayList<Piece> row : board){
+            ArrayList<Piece> temp = new ArrayList<>();
+
+            for(Piece piece : row){
+                temp.add(new Piece(piece.toString(), piece.getIsWhite()));
+            }
+            deepCopy.add(temp);
+        }
+
+        return deepCopy;
+    }
+
+    /**
+     * Helper method to check if the current square is under attack by any of the pieces
+     * @param row the current row
+     * @param col the current col
+     * @param board the current board
+     * @return true if underattack
+     */
+    private boolean isSquareUnderAttack(int row, int col, ArrayList<ArrayList<Piece>> board, boolean isWhite){
+
+//        System.out.println("IS WHITE IS 2222" + isWhite);
+//        System.out.println("THIS IS A " + (isWhite ? "WHite KING " : "BLACK KING "));
 
 
+        for (int r = 0; r < 8; r ++){
+            for (int c  = 0; c < 8; c ++){
+                Piece piece = board.get(c).get(r);
 
+
+                if (piece.toString().equals("King") || piece.getIsWhite() == isWhite){
+                    continue;
+                }
+
+
+                ArrayList<ArrayList<Integer>> validMoves = getValidMoves(board,r ,c ,piece );
+
+                System.out.println("Checking if square " + row + "," + col + " is under attack");
+                System.out.println("Enemy piece at: " + r + "," + c + " => " + piece.toString());
+
+                for(ArrayList<Integer> move : validMoves){
+                    System.out.println("  → Enemy move: " + move.get(0) + "," + move.get(1));
+                    if (move.get(0) == row && move.get(1) == col){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+//    /**
+//     * Method to get all possible moves of the opponent
+//     * @param board the current board
+//     * @param isWhite the current isWhite boolean
+//     * @return the arraylist of all the positions
+//     */
+//    private ArrayList<ArrayList<Integer>> getAllValidMovesOfOpposition(ArrayList<ArrayList<Piece>> board, boolean isWhite){
+//        ArrayList<ArrayList<Integer>> allPossibleMovesOfOpposition = new ArrayList<>();
+//        int row1 = 0;
+//        int col1 = 0;
+////        System.out.println("HERE");
+////        System.out.println(isWhite);
+//
+//        for (ArrayList<Piece> temp : board){
+//            for (Piece piece : temp){
+//                String pieceString = piece.toString();
+//                boolean isWhite1 = piece.getIsWhite();
+//
+//                if (!pieceString.equals("Blank") && isWhite1 != isWhite && !pieceString.equals("King") && checkBounds(row1, col1)){
+//                    System.out.println(isWhite1);
+//                    allPossibleMovesOfOpposition.addAll(getValidMoves(board, row1, col1, piece));
+//                }
+//                row1 ++;
+//            }
+//            col1 ++;
+//
+//        }
+//        return allPossibleMovesOfOpposition;
+//    }
 
     /**
      * Method to check for pawn takes
@@ -318,6 +419,7 @@ public class Movement {
 
                 // temp hold the current row and col that we could potentially take
                ArrayList<Integer> temp = new ArrayList<>();
+
                temp.add(currentCol);
                temp.add(row2Check);
 
@@ -390,13 +492,8 @@ public class Movement {
         return row < 8 && row >= 0 && col < 8 && col >= 0;
     }
 
+
     public static void main(String[] args) {
-        Board board = new Board();
-        board.makeInitialBoard();
-        ArrayList<ArrayList<Piece>> board1 = board.getBoard();
-
-        Movement m = new Movement("King");
     }
-
 
 }
