@@ -20,23 +20,25 @@ public class Movement {
     public String getMoveMentString(String pieceName) {
         return switch (pieceName) {
             case "King" -> "K";
-            case "Queen" -> // if we are a queen we can move diag/ up down
-             "HIVIDI";
-            case "Knight" ->
-                // if we are a knight we can only move in L shapes
-                    "LI";
-            case "Rook" ->
-                // if we are a rook we can move horizontally,
-                // and vertically H for horizontally V for Vertical I for no limit
-                    "HIVI";
-            case "Bishop" ->
-                // if we are a bishop we can only diagonally
-                // D for diagonally I for no limit
-                    "DI";
-            case "Pawn" ->
-                // need a way to say they can move forward 1
-                // unless it's the first move and then take diagonally
-                    "P";
+
+            // if we are a queen we can move diag/ up down
+            case "Queen" -> "HIVIDI";
+
+            // if we are a knight we can only move in L shapes
+            case "Knight" -> "LI";
+
+            // if we are a rook we can move horizontally,
+            // and vertically H for horizontally V for Vertical I for no limit
+            case "Rook" -> "HIVI";
+
+            // if we are a bishop we can only diagonally
+            // D for diagonally I for no limit
+            case "Bishop" -> "DI";
+
+            // need a way to say they can move forward 1
+            // unless it's the first move and then take diagonally
+            case "Pawn" -> "P";
+
             default -> "";
         };
     }
@@ -74,12 +76,8 @@ public class Movement {
         // for loop to loop through the movement string and parse out any valid moves
         for (int i = 0; i < moveMentString.length(); i++) {
             char currentChar = moveMentString.charAt(i);
-            System.out.println("This is the current character " + currentChar);
             validMoves.addAll(helperDirections(currentChar, moveMentString, i, row, col, board));
         }
-
-        // just need to set this after the initial move here.
-//        isFirstMove = false;
 
         return validMoves;
     }
@@ -126,106 +124,11 @@ public class Movement {
         }
 
         else if(direction == 'P') {
-            System.out.println("HERE ");
-            // todo: need to also work on if there is pieces that they can take
-            // bounds checking to make sure that the pawn cant go off of the screen
-            ArrayList<Integer> move1 = new ArrayList<>();
-            ArrayList<Integer> move2 = new ArrayList<>();
-
-
-            if(this.isFirstMove && isWhite){
-
-                if (board.get(col - 1).get(row).toString().equals("Blank")) {
-                    move2.addAll(Arrays.asList(row, col - 1));
-
-                    if (board.get(col - 2).get(row).toString().equals("Blank")) {
-                        move1.addAll(Arrays.asList(row, col - 2));
-                    }
-                }
-            }
-
-            else if(this.isFirstMove && !isWhite){
-
-                if (board.get(col + 1).get(row).toString().equals("Blank")){
-                    move2.addAll(Arrays.asList(row , col + 1));
-
-                    if (board.get(col + 2).get(row).toString().equals("Blank")){
-                        move1.addAll(Arrays.asList(row , col + 2));
-                    }
-                }
-
-
-            }
-
-            else if (!isWhite && board.get(col + 1).get(row).toString().equals("Blank")){
-//                System.out.println( " THE PIECE IS BLACK  222 ");
-                move1.addAll(Arrays.asList(row, col + 1));
-            }
-
-            else if (isWhite && board.get(col - 1).get(row).toString().equals("Blank")){
-                move1.addAll(Arrays.asList(row, col - 1));
-            }
-
-
-            if(!this.isFirstMove){
-                if (!move1.isEmpty()){
-                    combined.add(move1);
-                }
-            }
-            else {
-                if (!move1.isEmpty()){
-                    combined.add(move1);
-                }
-                if (!move2.isEmpty()){
-                    combined.add(move2);
-                }
-            }
-
-            combined.addAll(checkForPawnTakes(col, row, board, isWhite));
-
-            return combined;
+            return handlePawnMoves(row, col, isWhite, board);
         }
 
-        // todo: add a way to check if the king can move there based upon checks
         else if(direction == 'K') {
-
-            int[][] allDirections = {
-                    {1,0}, // down
-                    {-1,0}, // up
-                    {-1,1}, // up right
-                    {-1,-1}, // up left
-                    {1,1}, // down right
-                    {1,-1}, // down left
-                    {0,-1}, // left
-                    {0,1}, // right
-            };
-
-
-            for(int[] dirT :  allDirections){
-                int newRow = dirT[0] + row;
-                int newCol = dirT[1] + col;
-
-                if(!checkBounds(newRow, newCol)){
-                    continue;
-                }
-
-                boolean isSameColor = board.get(newCol).get(newRow).getIsWhite() == isWhite;
-                boolean isBlankTile = board.get(newCol).get(newRow).toString().equals("Blank");
-
-                System.out.println("This is the is same color " + isSameColor);
-                System.out.println("This is the color : " + isWhite);
-
-
-
-                if (!isSameColor || isBlankTile){
-                    ArrayList<Integer> temp = new ArrayList<>();
-                    temp.add(newRow);
-                    temp.add(newCol);
-                    combined.add(temp);
-                }
-            }
-
-            return combined;
+            return handleKingMoves(row, col, isWhite, board);
         }
 
         else {
@@ -241,13 +144,145 @@ public class Movement {
                 deltaX = move[0];
                 deltaY = move[1];
 
-                ArrayList<ArrayList<Integer>> pos = exploreUntilYouHitSomething(deltaX, deltaY, row, col, board, direction == 'L' ? true : false);
+                ArrayList<ArrayList<Integer>> pos = exploreUntilYouHitSomething(
+                        deltaX,
+                        deltaY,
+                        row,
+                        col,
+                        board,
+                        direction == 'L' ? true : false
+                );
+
                 combined.addAll(pos);
             }
         }
 
         return combined;
     }
+
+
+    /**
+     * Helper method to handle the pawn moves
+     * @param row the current row
+     * @param col the current col
+     * @param isWhite the boolean to check if a piece is white
+     * @param board the current board
+     * @return All the possible moves that the pawn could make
+     */
+    private  ArrayList<ArrayList<Integer>> handlePawnMoves(int row, int col, boolean isWhite,
+                                                           ArrayList<ArrayList<Piece>> board){
+
+        ArrayList<ArrayList<Integer>> combined = new ArrayList<>();
+
+//        System.out.println("HERE ");
+        // todo: need to also work on if there is pieces that they can take
+        // bounds checking to make sure that the pawn cant go off of the screen
+        ArrayList<Integer> move1 = new ArrayList<>();
+        ArrayList<Integer> move2 = new ArrayList<>();
+
+
+        if(this.isFirstMove && isWhite){
+
+            if (board.get(col - 1).get(row).toString().equals("Blank")) {
+                move2.addAll(Arrays.asList(row, col - 1));
+
+                if (board.get(col - 2).get(row).toString().equals("Blank")) {
+                    move1.addAll(Arrays.asList(row, col - 2));
+                }
+            }
+        }
+
+        else if(this.isFirstMove && !isWhite){
+
+            if (board.get(col + 1).get(row).toString().equals("Blank")){
+                move2.addAll(Arrays.asList(row , col + 1));
+
+                if (board.get(col + 2).get(row).toString().equals("Blank")){
+                    move1.addAll(Arrays.asList(row , col + 2));
+                }
+            }
+
+
+        }
+
+        else if (!isWhite && board.get(col + 1).get(row).toString().equals("Blank")){
+            move1.addAll(Arrays.asList(row, col + 1));
+        }
+
+        else if (isWhite && board.get(col - 1).get(row).toString().equals("Blank")){
+            move1.addAll(Arrays.asList(row, col - 1));
+        }
+
+
+        if(!this.isFirstMove){
+            if (!move1.isEmpty()){
+                combined.add(move1);
+            }
+        }
+        else {
+            if (!move1.isEmpty()){
+                combined.add(move1);
+            }
+            if (!move2.isEmpty()){
+                combined.add(move2);
+            }
+        }
+
+        combined.addAll(checkForPawnTakes(col, row, board, isWhite));
+
+        return combined;
+    }
+
+
+    /**
+     * Helper method to handle the kings moves
+     * @param row the current row
+     * @param col the current col
+     * @param isWhite the current boolean to check if the piece is white
+     * @param board the current board configuration
+     * @return All the possible moves that the current king can make
+     */
+    private  ArrayList<ArrayList<Integer>> handleKingMoves(int row, int col, boolean isWhite,
+                                                           ArrayList<ArrayList<Piece>> board){
+        ArrayList<ArrayList<Integer>> combined = new ArrayList<>();
+
+        int[][] allDirections = {
+                {1,0}, // down
+                {-1,0}, // up
+                {-1,1}, // up right
+                {-1,-1}, // up left
+                {1,1}, // down right
+                {1,-1}, // down left
+                {0,-1}, // left
+                {0,1}, // right
+        };
+
+
+        for(int[] dirT :  allDirections){
+            int newRow = dirT[0] + row;
+            int newCol = dirT[1] + col;
+
+            if(!checkBounds(newRow, newCol)){
+                continue;
+            }
+
+            boolean isSameColor = board.get(newCol).get(newRow).getIsWhite() == isWhite;
+            boolean isBlankTile = board.get(newCol).get(newRow).toString().equals("Blank");
+
+            if (!isSameColor || isBlankTile){
+                ArrayList<Integer> temp = new ArrayList<>();
+                temp.add(newRow);
+                temp.add(newCol);
+                combined.add(temp);
+            }
+        }
+
+        return combined;
+
+    }
+
+
+
 
 
     /**
@@ -258,7 +293,8 @@ public class Movement {
      * @param isWhite boolean to check if its white
      * @return positions that are valid
      */
-    private ArrayList<ArrayList<Integer>> checkForPawnTakes(int row, int col, ArrayList<ArrayList<Piece>> board, boolean isWhite) {
+    private ArrayList<ArrayList<Integer>> checkForPawnTakes(int row, int col, ArrayList<ArrayList<Piece>> board,
+                                                            boolean isWhite) {
 
         ArrayList<ArrayList<Integer>> combined = new ArrayList<>();
         int row2Check = isWhite ? row - 1 : row + 1;
@@ -274,30 +310,21 @@ public class Movement {
                 continue;
             }
 
-            System.out.println("current col : " + currentCol + " row : " + row2Check);
-            System.out.println("FIRST CHECK " + board.get(row2Check).get(currentCol).toString().equals("Blank"));
-            System.out.println("TO STRING " + board.get(row2Check).get(currentCol).toString());
-            System.out.println("SECOND CHECK " +  (board.get(row2Check).get(currentCol).getIsWhite() == isWhite));
 
 
 
             if (!board.get(row2Check).get(currentCol).toString().equals("Blank") &&
                     board.get(row2Check).get(currentCol).getIsWhite() != isWhite){
 
-//                System.out.println("We are here");
-
                 // temp hold the current row and col that we could potentially take
                ArrayList<Integer> temp = new ArrayList<>();
                temp.add(currentCol);
                temp.add(row2Check);
 
-//                System.out.println("HERE Row " + temp.get(0) + " Col " + temp.get(1));
 
                combined.add(temp);
             }
         }
-        System.out.println();
-
         return combined;
     }
 
@@ -326,24 +353,17 @@ public class Movement {
         while(row >= 0 && col >= 0 && row < 8 && col < 8 && currentIteration < limit) {
             Piece currentP = board.get(col).get(row);
 
-
             if (!currentP.toString().equals("Blank")){
                 // we need to check if this is the same color or a different color
                 boolean currentIsWhite = currentP.getIsWhite();
 
                 if (isWhite && !currentIsWhite || !isWhite && currentIsWhite){
                     validMoves.add(new ArrayList<>(Arrays.asList(row, col)));
-                    System.out.println("ROW " + row + " " + "COL " + col);
                 }
-
                 break;
-
-
             }
-
             else{
                 validMoves.add(new ArrayList<>(Arrays.asList(row, col)));
-                System.out.println("ROW " + row + " " + "COL " + col);
             }
 
             row += deltaY;
@@ -366,7 +386,6 @@ public class Movement {
         isFirstMove = firstMove;
     }
 
-
     private boolean checkBounds(int row, int col){
         return row < 8 && row >= 0 && col < 8 && col >= 0;
     }
@@ -377,10 +396,6 @@ public class Movement {
         ArrayList<ArrayList<Piece>> board1 = board.getBoard();
 
         Movement m = new Movement("King");
-//        m.exploreUntilYouHitSomething(1, 0, 1,0, board1);
-
-//        m.parseMoveMentString("VI", 3, 3, board1);
-//        m.getValidMoves(board1, 3, 3, board.getPiece(3, 3));
     }
 
 
