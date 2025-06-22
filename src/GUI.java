@@ -1,5 +1,6 @@
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -175,6 +176,9 @@ public class GUI extends Application {
                 }
             }
         }
+
+
+//        board.printBoard();
     }
 
 
@@ -211,6 +215,25 @@ public class GUI extends Application {
         return false;
     }
 
+    /**
+     * Method to help update the kings positions based upon moves
+     * @param row new row
+     * @param col new col
+     * @param currentPiece the current piece
+     */
+    private void updateKingPos(int row, int col, Piece currentPiece){
+        boolean isWhite = currentPiece.getIsWhite();
+        if (currentPiece.toString().equals("King")){
+            System.out.println("Updating the current position of the king to " + row + ", " + col);
+            if (isWhite){
+                board.setW_kingPos(row, col);
+            }
+            else {
+                board.setB_kingPos(row, col);
+            }
+        }
+    }
+
 
     /**
      * Method to handle updating the states based upon user input ( interactions )
@@ -219,31 +242,41 @@ public class GUI extends Application {
     private void setUpActionEvent(StackPane rectangle){
 
         rectangle.setOnMouseClicked(mouseEvent -> {
-
+            // Just store the current clicked on row and col
             int row = pieces.get(rectangle)[0];
             int col = pieces.get(rectangle)[1];
 
+            // store the current piece
             Piece currentP = board.getPiece(row, col);
 
+            // boolean to check if the current piece is white
+            boolean pieceIsWhite = false;
 
+            // store the row and col in an array
             int[] location = new int[2];
             location[0] = row;
             location[1] = col;
 
 
-
             // need to update more states here
             if(location != lastPiecePos && checkIfPossibleMovesContains(row, col)){
-                Piece lastP = board.getPiece(lastPiecePos[0], lastPiecePos[1]);
+                // just store the oldRow, and oldCol
+                int oldRow = lastPiecePos[0];
+                int oldCol = lastPiecePos[1];
+
+                Piece lastP = board.getPiece(oldRow, oldCol);
+                pieceIsWhite = lastP.getIsWhite();
 
                 // need to say that we need to update the board state based upon the new strings
-
                 // replace the current row/ col with the piece in question'
-//                System.out.println("This is the last piece " + lastPiecePos[0] + " and " + lastPiecePos[1]);
-
                 // set the new piece here and the old piece location to blank
                 board.setPiece(row, col, lastP);
-                board.setPiece(lastPiecePos[0], lastPiecePos[1], new Piece("Blank", true));
+                lastP.setPosition(row, col);
+
+                board.setPiece(oldRow, oldCol, new Piece("Blank", true, oldRow, oldCol));
+
+                // update the king positions in the board object
+                updateKingPos(row, col, lastP);
 
                 // set the first move to false after this
                 lastP.getMovement().setFirstMove(false);
@@ -256,7 +289,28 @@ public class GUI extends Application {
 //                System.out.println( "THIS IS THE CURRENT PIECE "  +  board.getPiece(row, col).toString());
                 lastPossibleMoves = currentP.getMovement().getValidMoves(board.getBoard(), row, col, currentP);
 
+                System.out.println("The color is white is  " + pieceIsWhite);
+                int c = board.checkForMate(pieceIsWhite);
 
+                if (c == 0){
+                    // if we are here we want to stop the game
+                    System.out.println("IN CHECK MATE");
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Check Mate");
+                    alert.setHeaderText(null);
+                    alert.setContentText("The color " + (!pieceIsWhite ? "white " : "black ") + "wins");
+                    alert.showAndWait();
+                }
+
+                else if (c == 1){
+                    // if we are here we want to send a warning
+                    System.out.println("IN CHECK");
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Check Mate");
+                    alert.setHeaderText(null);
+                    alert.setContentText("The color " + (!pieceIsWhite ? "white " : "black ") + "is in check");
+                    alert.showAndWait();
+                }
             }
             else if (location != lastPiecePos){
                 lastPiecePos = location;
@@ -264,7 +318,6 @@ public class GUI extends Application {
             }
 
             updateBoard();
-
 
         });
     }

@@ -4,12 +4,14 @@ public class Piece {
     private boolean isAlive = true;
     private boolean isWhite;
     private boolean isClicked = false;
+    int[] position = new int[2];
 
-    public Piece(String pieceName, boolean isWhite) {
+    public Piece(String pieceName, boolean isWhite, int row, int col) {
         this.pieceName = pieceName;
         this.isWhite = isWhite;
         this.movement = new Movement(pieceName);
-
+        this.position[0] = row;
+        this.position[1] = col;
     }
 
     private Movement findMovement(String pieceName) {
@@ -31,6 +33,15 @@ public class Piece {
 
     public Movement getMovement() {
         return this.movement;
+    }
+
+    public int[] getPosition() {
+        return this.position;
+    }
+
+    public void setPosition(int row, int col) {
+        this.position[0] = row;
+        this.position[1] = col;
     }
 
 
