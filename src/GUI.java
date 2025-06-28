@@ -24,6 +24,8 @@ public class GUI extends Application {
     private int[] lastPiecePos = null;
     private ArrayList<ArrayList<Integer>> lastPossibleMoves = new ArrayList<>();
     private HashMap<String, Image> images = new HashMap<>();
+    private int numberOfPeopleIn = 0;
+    private boolean isWhitesTurn = true;
 
     public static void main(String[] args) {
         launch(args);
@@ -50,7 +52,7 @@ public class GUI extends Application {
 
     /**
      * Method to map strings to all the images here
-     * TODO : REFACTOR THIS LATER
+     *
      */
     private void setUpImages(){
         images.put("b_Bishop",  new Image(Objects.requireNonNull(GUI.class.getResourceAsStream("b_bishop.png"))));
@@ -239,7 +241,7 @@ public class GUI extends Application {
      * Method to handle updating the states based upon user input ( interactions )
      * @param rectangle ..
      */
-    private void setUpActionEvent(StackPane rectangle){
+    private void setUpActionEvent(StackPane rectangle){\
 
         rectangle.setOnMouseClicked(mouseEvent -> {
             // Just store the current clicked on row and col
@@ -248,6 +250,9 @@ public class GUI extends Application {
 
             // store the current piece
             Piece currentP = board.getPiece(row, col);
+
+
+            // Enforce turn logic
 
             // boolean to check if the current piece is white
             boolean pieceIsWhite = false;
@@ -287,7 +292,9 @@ public class GUI extends Application {
                 // todo : might need to take turns instead
                 lastPiecePos = location;
 //                System.out.println( "THIS IS THE CURRENT PIECE "  +  board.getPiece(row, col).toString());
-                lastPossibleMoves = currentP.getMovement().getValidMoves(board.getBoard(), row, col, currentP);
+                lastPossibleMoves = new ArrayList<>();
+
+                updateBoard();
 
                 System.out.println("The color is white is  " + pieceIsWhite);
                 int c = board.checkForMate(pieceIsWhite);
@@ -295,29 +302,41 @@ public class GUI extends Application {
                 if (c == 0){
                     // if we are here we want to stop the game
                     System.out.println("IN CHECK MATE");
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Check Mate");
-                    alert.setHeaderText(null);
-                    alert.setContentText("The color " + (!pieceIsWhite ? "white " : "black ") + "wins");
-                    alert.showAndWait();
+//                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+//                    alert.setTitle("Check Mate");
+//                    alert.setHeaderText(null);
+//                    alert.setContentText("The color " + (!pieceIsWhite ? "white " : "black ") + "wins");
+//                    alert.showAndWait();
                 }
 
                 else if (c == 1){
                     // if we are here we want to send a warning
                     System.out.println("IN CHECK");
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Check Mate");
-                    alert.setHeaderText(null);
-                    alert.setContentText("The color " + (!pieceIsWhite ? "white " : "black ") + "is in check");
-                    alert.showAndWait();
+//                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+//                    alert.setTitle("Check Mate");
+//                    alert.setHeaderText(null);
+//                    alert.setContentText("The color " + (!pieceIsWhite ? "white " : "black ") + "is in check");
+//                    alert.showAndWait();
+
                 }
+
+                isWhitesTurn = !isWhitesTurn;
             }
             else if (location != lastPiecePos){
+
+                if (!currentP.toString().equals("Blank")) {
+                    if ((isWhitesTurn && !currentP.getIsWhite()) || (!isWhitesTurn && currentP.getIsWhite())) {
+                        return;
+                    }
+                }
                 lastPiecePos = location;
                 lastPossibleMoves = currentP.getMovement().getValidMoves(board.getBoard(), row, col, currentP);
+
+                updateBoard();
             }
 
-            updateBoard();
+//            updateBoard();
+
 
         });
     }
