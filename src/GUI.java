@@ -241,7 +241,7 @@ public class GUI extends Application {
      * Method to handle updating the states based upon user input ( interactions )
      * @param rectangle ..
      */
-    private void setUpActionEvent(StackPane rectangle){\
+    private void setUpActionEvent(StackPane rectangle){
 
         rectangle.setOnMouseClicked(mouseEvent -> {
             // Just store the current clicked on row and col
